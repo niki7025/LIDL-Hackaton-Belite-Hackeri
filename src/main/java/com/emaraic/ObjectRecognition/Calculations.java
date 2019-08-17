@@ -8,8 +8,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 import javax.swing.JTextArea;
 
@@ -19,6 +23,24 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 public class Calculations {
+
+	public static void buildIndex(List<String> products, Map<String, List<Integer>> index) {
+		for (int p = 0; p < products.size(); p++) {
+			String product = products.get(p);
+			StringTokenizer tokenizer = new StringTokenizer(product, " ,&()-:%\"\'.;/");
+			while (tokenizer.hasMoreTokens()) {
+				String token = tokenizer.nextToken();
+				List<Integer> places;
+				if (index.containsKey(token) == true) {
+					places = index.get(token);
+				} else {
+					places = new ArrayList<Integer>();
+					index.put(token, places);
+				}
+				places.add(p);
+			}
+		}
+	}
 
 	public static void loadDataSet(List<String> products) throws FileNotFoundException, IOException, ParseException {
 		JSONParser parser = new JSONParser();
@@ -32,10 +54,9 @@ public class Calculations {
 		}
 	}
 
-	public static void listMatches(String word, List<String> products, JTextArea results) {
+	public static void listMatches1(String word, List<String> products, JTextArea results) {
 		word = word.toLowerCase();
 		String[] list = word.split(" ");
-		System.err.println(Arrays.toString(list));
 		for (String product : products) {
 			boolean found = false;
 			for (String token : list) {
@@ -46,6 +67,22 @@ public class Calculations {
 			if (found == true) {
 				results.setText(product + "\n" + results.getText());
 			}
+		}
+	}
+
+	public static void listMatches2(String word, List<String> products, JTextArea results,
+			Map<String, List<Integer>> index) {
+		word = word.toLowerCase();
+		String[] list = word.split(" ");
+		Set<Integer> values = new HashSet<>();
+		for (String token : list) {
+			if (index.containsKey(token) == false) {
+				continue;
+			}
+			values.addAll(index.get(token));
+		}
+		for (Integer k : values) {
+			results.setText(products.get(k) + "\n" + results.getText());
 		}
 	}
 

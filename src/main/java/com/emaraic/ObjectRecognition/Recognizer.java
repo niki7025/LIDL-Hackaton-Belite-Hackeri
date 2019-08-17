@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,6 +58,7 @@ public class Recognizer extends JFrame implements ActionListener {
 	private static List<String> labels;
 	private String bestMatch = "";
 	private static List<String> products = new ArrayList<String>();
+	private static Map<String, List<Integer>> index = new HashMap<String, List<Integer>>();
 
 	private void loadInception() {
 		File file = new File("C:\\Users\\NikolayDimitrov\\Desktop\\inception_dec_2015");
@@ -109,6 +112,7 @@ public class Recognizer extends JFrame implements ActionListener {
 		modelselected = true;
 		try {
 			Calculations.loadDataSet(products);
+			Calculations.buildIndex(products, index);
 		} catch (IOException | ParseException e) {
 		}
 	}
@@ -122,7 +126,7 @@ public class Recognizer extends JFrame implements ActionListener {
 				try {
 					File file = imgch.getSelectedFile();
 					imagepath = file.getAbsolutePath();
-					imgpth.setText(imagepath);					
+					imgpth.setText(imagepath);
 					Image img = ImageIO.read(file);
 
 					viewer.setIcon(new ImageIcon(img.getScaledInstance(200, 200, 200)));
@@ -148,7 +152,8 @@ public class Recognizer extends JFrame implements ActionListener {
 				result.setText(String.format("BEST MATCH: %s (%.2f%% likely)", labels.get(bestLabelIdx),
 						labelProbabilities[bestLabelIdx] * 100f));
 				bestMatch = labels.get(bestLabelIdx);
-				Calculations.listMatches(bestMatch, products, results);
+				// Calculations.listMatches1(bestMatch, products, results);
+				Calculations.listMatches2(bestMatch, products, results, index);
 			}
 
 		}
