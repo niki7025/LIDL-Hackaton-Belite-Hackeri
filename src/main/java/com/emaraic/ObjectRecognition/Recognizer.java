@@ -1,23 +1,17 @@
 package com.emaraic.ObjectRecognition;
 
-import com.esotericsoftware.tablelayout.swing.Table;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -29,15 +23,14 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.tensorflow.DataType;
 import org.tensorflow.Graph;
 import org.tensorflow.Output;
 import org.tensorflow.Session;
 import org.tensorflow.Tensor;
+
+import com.esotericsoftware.tablelayout.swing.Table;
 
 /**
  *
@@ -129,8 +122,7 @@ public class Recognizer extends JFrame implements ActionListener {
 				try {
 					File file = imgch.getSelectedFile();
 					imagepath = file.getAbsolutePath();
-					imgpth.setText(imagepath);
-					System.out.println("Image Path: " + imagepath);
+					imgpth.setText(imagepath);					
 					Image img = ImageIO.read(file);
 
 					viewer.setIcon(new ImageIcon(img.getScaledInstance(200, 200, 200)));
@@ -155,12 +147,8 @@ public class Recognizer extends JFrame implements ActionListener {
 				result.setText("");
 				result.setText(String.format("BEST MATCH: %s (%.2f%% likely)", labels.get(bestLabelIdx),
 						labelProbabilities[bestLabelIdx] * 100f));
-				System.out.println(String.format("BEST MATCH: %s (%.2f%% likely)", labels.get(bestLabelIdx),
-						labelProbabilities[bestLabelIdx] * 100f));
 				bestMatch = labels.get(bestLabelIdx);
-				System.out.println(bestMatch);
-
-				Calculations.listMatches(bestMatch,products,results);
+				Calculations.listMatches(bestMatch, products, results);
 			}
 
 		}
@@ -196,8 +184,6 @@ public class Recognizer extends JFrame implements ActionListener {
 
 		return best;
 	}
-
-	
 
 	static class GraphBuilder {
 

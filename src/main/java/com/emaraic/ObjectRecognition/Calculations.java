@@ -1,14 +1,13 @@
 package com.emaraic.ObjectRecognition;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -20,7 +19,6 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 public class Calculations {
-	
 
 	public static void loadDataSet(List<String> products) throws FileNotFoundException, IOException, ParseException {
 		JSONParser parser = new JSONParser();
@@ -34,16 +32,23 @@ public class Calculations {
 		}
 	}
 
-	public static void listMatches(String word, List<String> products,JTextArea results) {
+	public static void listMatches(String word, List<String> products, JTextArea results) {
 		word = word.toLowerCase();
+		String[] list = word.split(" ");
+		System.err.println(Arrays.toString(list));
 		for (String product : products) {
-			if (product.indexOf(word) == -1) {
-				continue;
+			boolean found = false;
+			for (String token : list) {
+				if (product.indexOf(token) != -1) {
+					found = true;
+				}
 			}
-			results.setText(product + "\n" + results.getText());
+			if (found == true) {
+				results.setText(product + "\n" + results.getText());
+			}
 		}
 	}
-	
+
 	public static byte[] readAllBytesOrExit(Path path) {
 		try {
 			return Files.readAllBytes(path);
