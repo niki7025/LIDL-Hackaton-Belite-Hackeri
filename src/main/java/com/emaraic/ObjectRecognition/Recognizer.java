@@ -5,6 +5,8 @@ import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -12,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,14 +24,21 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.tensorflow.DataType;
 import org.tensorflow.Graph;
 import org.tensorflow.Output;
 import org.tensorflow.Session;
 import org.tensorflow.Tensor;
+
 
 /**
  *
@@ -48,7 +58,8 @@ public class Recognizer extends JFrame implements ActionListener {
 	private JLabel viewer;
 	private JTextField result;
 	private JTextField imgpth;
-	private JTextField modelpth;
+	//private JTextField modelpth;
+	private JTextArea results;
 	private FileNameExtensionFilter imgfilter = new FileNameExtensionFilter("JPG & JPEG Images", "jpg", "jpeg");
 	//private String modelpath;
 	private String imagepath;
@@ -56,6 +67,7 @@ public class Recognizer extends JFrame implements ActionListener {
 	private static byte[] graphDef;
 	private static List<String> labels;
 	private String bestMatch = "";
+	private static List<String> products = new ArrayList<String>();
 	
 	private static void loadInception() {		
 		File file = new File("C:\\Users\\NikolayDimitrov\\Desktop\\inception_dec_2015");
@@ -65,14 +77,28 @@ public class Recognizer extends JFrame implements ActionListener {
 		labels = readAllLinesOrExit(Paths.get(modelpath, "imagenet_comp_graph_label_strings.txt"));
 	}
 	
-	private static void loadDataSet() {
-		File file = new File("C:\\Users\\NikolayDimitrov\\Desktop\\small_product_dataset");
-		
+	private static void loadDataSet() throws FileNotFoundException, IOException, ParseException {
+		JSONParser parser = new JSONParser();
+		JSONArray array = (JSONArray) parser.parse(new FileReader("C:\\Users\\NikolayDimitrov\\Desktop\\small_product_dataset.json"));
+		Iterator<JSONObject> iterator = array.iterator();
+		 while(iterator.hasNext()){
+			 JSONObject current = iterator.next();
+			 products.add(current.get("ProductId")+ " " + current.get("Name") + " " + current.get("Description"));
+		 }		
+	}
+	
+	private void listMatches(String word) {
+		for(String product : products) {
+			if(product.indexOf(word) == -1) {
+				continue;
+			}
+			results.setText(product);
+		}
 	}
 	
 	public Recognizer() {
 		setTitle("Object Recognition - Emaraic.com");
-		setSize(500, 500);
+		setSize(1000, 800);
 		table = new Table();
 
 		predict = new JButton("Predict");
@@ -92,8 +118,10 @@ public class Recognizer extends JFrame implements ActionListener {
 		result = new JTextField();
 		//modelpth = new JTextField();
 		imgpth = new JTextField();
+		results = new JTextArea(20,60);
 		//modelpth.setEditable(false);
 		imgpth.setEditable(false);
+		results.setEditable(false);
 		viewer = new JLabel();
 		getContentPane().add(table);
 		//table.addCell(modelpth).width(250);
@@ -109,6 +137,7 @@ public class Recognizer extends JFrame implements ActionListener {
 		table.row();
 		table.addCell(result).width(300).colspan(2);
 		table.row();
+		table.addCell(results).center();
 
 		setLocationRelativeTo(null);
 
@@ -117,7 +146,12 @@ public class Recognizer extends JFrame implements ActionListener {
 		
 		loadInception();
 		modelselected = true;
-		loadDataSet();
+		try {
+			loadDataSet();
+		} catch (IOException | ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -174,6 +208,8 @@ public class Recognizer extends JFrame implements ActionListener {
 						labelProbabilities[bestLabelIdx] * 100f));
 				bestMatch = labels.get(bestLabelIdx);
 				System.out.println(bestMatch);
+				
+				listMatches(bestMatch);
 			}
 
 		}
