@@ -39,7 +39,6 @@ import org.tensorflow.Output;
 import org.tensorflow.Session;
 import org.tensorflow.Tensor;
 
-
 /**
  *
  * @author Taha Emara Website: http://www.emaraic.com Email : taha@emaraic.com
@@ -51,82 +50,50 @@ public class Recognizer extends JFrame implements ActionListener {
 
 	private Table table;
 	private JButton predict;
-	private JButton incep;
 	private JButton img;
-	//private JFileChooser incepch;
 	private JFileChooser imgch;
 	private JLabel viewer;
 	private JTextField result;
 	private JTextField imgpth;
-	//private JTextField modelpth;
 	private JTextArea results;
 	private FileNameExtensionFilter imgfilter = new FileNameExtensionFilter("JPG & JPEG Images", "jpg", "jpeg");
-	//private String modelpath;
 	private String imagepath;
 	private boolean modelselected = false;
 	private static byte[] graphDef;
 	private static List<String> labels;
 	private String bestMatch = "";
 	private static List<String> products = new ArrayList<String>();
-	
-	private static void loadInception() {		
+
+	private void loadInception() {
 		File file = new File("C:\\Users\\NikolayDimitrov\\Desktop\\inception_dec_2015");
 		String modelpath = file.getAbsolutePath();
-		
-		graphDef = readAllBytesOrExit(Paths.get(modelpath, "tensorflow_inception_graph.pb"));
-		labels = readAllLinesOrExit(Paths.get(modelpath, "imagenet_comp_graph_label_strings.txt"));
+
+		graphDef = Calculations.readAllBytesOrExit(Paths.get(modelpath, "tensorflow_inception_graph.pb"));
+		labels = Calculations.readAllLinesOrExit(Paths.get(modelpath, "imagenet_comp_graph_label_strings.txt"));
 	}
-	
-	private static void loadDataSet() throws FileNotFoundException, IOException, ParseException {
-		JSONParser parser = new JSONParser();
-		JSONArray array = (JSONArray) parser.parse(new FileReader("C:\\Users\\NikolayDimitrov\\Desktop\\small_product_dataset.json"));
-		Iterator<JSONObject> iterator = array.iterator();
-		 while(iterator.hasNext()){
-			 JSONObject current = iterator.next();
-			 products.add((current.get("ProductId") + " " + current.get("Name") + " " + current.get("Description")).toLowerCase());
-		 }		
-	}
-	
-	private void listMatches(String word) {
-		word = word.toLowerCase();
-		for(String product : products) {
-			if(product.indexOf(word) == -1) {
-				continue;
-			}
-			results.setText(product + "\n" +  results.getText() );
-		}
-	}
-	
+
 	public Recognizer() {
-		setTitle("Object Recognition - Emaraic.com");
+		setTitle("Object Recognition - LIDL Digital Hackathon 2019");
 		setSize(1300, 800);
 		table = new Table();
 
 		predict = new JButton("Predict");
 		predict.setEnabled(false);
-		//incep = new JButton("Choose Inception");
 		img = new JButton("Choose Image");
-		//incep.addActionListener(this);
 		img.addActionListener(this);
 		predict.addActionListener(this);
 
-		//incepch = new JFileChooser();
 		imgch = new JFileChooser();
 		imgch.setFileFilter(imgfilter);
 		imgch.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		//incepch.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
 		result = new JTextField();
-		//modelpth = new JTextField();
 		imgpth = new JTextField();
-		results = new JTextArea(20,60);
-		//modelpth.setEditable(false);
+		results = new JTextArea(20, 60);
 		imgpth.setEditable(false);
 		results.setEditable(false);
 		viewer = new JLabel();
 		getContentPane().add(table);
-		//table.addCell(modelpth).width(250);
-		//table.addCell(incep);
 		table.row();
 		table.addCell(imgpth).width(250);
 		table.addCell(img);
@@ -144,35 +111,17 @@ public class Recognizer extends JFrame implements ActionListener {
 
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
+
 		loadInception();
 		modelselected = true;
 		try {
-			loadDataSet();
+			Calculations.loadDataSet(products);
 		} catch (IOException | ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-//		if (e.getSource() == incep) {
-//			int returnVal = incepch.showOpenDialog(this);
-//
-//			if (returnVal == JFileChooser.APPROVE_OPTION) {
-//				File file = incepch.getSelectedFile();
-//				modelpath = file.getAbsolutePath();
-//				
-//				modelpth.setText(modelpath);
-//				System.out.println("Opening: " + file.getAbsolutePath());
-//				modelselected = true;
-//				graphDef = readAllBytesOrExit(Paths.get(modelpath, "tensorflow_inception_graph.pb"));
-//				labels = readAllLinesOrExit(Paths.get(modelpath, "imagenet_comp_graph_label_strings.txt"));
-//			} else {
-//				System.out.println("Process was cancelled by user.");
-//			}
-//		}
 
 		if (e.getSource() == img) {
 			int returnVal = imgch.showOpenDialog(Recognizer.this);
@@ -198,7 +147,7 @@ public class Recognizer extends JFrame implements ActionListener {
 
 		if (e.getSource() == predict) {
 			results.setText("");
-			byte[] imageBytes = readAllBytesOrExit(Paths.get(imagepath));
+			byte[] imageBytes = Calculations.readAllBytesOrExit(Paths.get(imagepath));
 
 			try (Tensor image = Tensor.create(imageBytes)) {
 				float[] labelProbabilities = executeInceptionGraph(graphDef, image);
@@ -210,8 +159,8 @@ public class Recognizer extends JFrame implements ActionListener {
 						labelProbabilities[bestLabelIdx] * 100f));
 				bestMatch = labels.get(bestLabelIdx);
 				System.out.println(bestMatch);
-				
-				listMatches(bestMatch);
+
+				Calculations.listMatches(bestMatch,products,results);
 			}
 
 		}
@@ -248,33 +197,8 @@ public class Recognizer extends JFrame implements ActionListener {
 		return best;
 	}
 
-	private static byte[] readAllBytesOrExit(Path path) {
-		try {
-			return Files.readAllBytes(path);
-		} catch (IOException e) {
-			System.err.println("Failed to read [" + path + "]: " + e.getMessage());
-			System.exit(1);
-		}
-		
-		return new byte[0];
-	}
+	
 
-	private static List<String> readAllLinesOrExit(Path path) {
-		try {
-			return Files.readAllLines(path, Charset.forName("UTF-8"));
-		} catch (IOException e) {
-			System.err.println("Failed to read [" + path + "]: " + e.getMessage());
-			System.exit(0);
-		}
-		
-		return new ArrayList<String>();
-	}
-
-	// In the fullness of time, equivalents of the methods of this class should be
-	// auto-generated from
-	// the OpDefs linked into libtensorflow_jni.so. That would match what is done in
-	// other languages
-	// like Python, C++ and Go.
 	static class GraphBuilder {
 
 		GraphBuilder(Graph g) {
@@ -318,7 +242,6 @@ public class Recognizer extends JFrame implements ActionListener {
 
 		private Graph g;
 	}
-	////////////
 
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(new Runnable() {
