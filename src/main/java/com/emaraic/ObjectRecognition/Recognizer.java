@@ -49,7 +49,6 @@ public class Recognizer extends JFrame implements ActionListener {
 	private JFileChooser imgch;
 	private JLabel viewer;
 	private JTextField result;
-	private JTextField imgpth;
 	private JTextArea results;
 	private FileNameExtensionFilter imgfilter = new FileNameExtensionFilter("JPG & JPEG Images", "jpg", "jpeg");
 	private String imagepath;
@@ -84,14 +83,13 @@ public class Recognizer extends JFrame implements ActionListener {
 		imgch.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
 		result = new JTextField();
-		imgpth = new JTextField();
 		results = new JTextArea(20, 60);
-		imgpth.setEditable(false);
 		results.setEditable(false);
 		viewer = new JLabel();
+		
 		getContentPane().add(table);
+		
 		table.row();
-		table.addCell(imgpth).width(250);
 		table.addCell(img);
 
 		table.row();
@@ -126,7 +124,6 @@ public class Recognizer extends JFrame implements ActionListener {
 				try {
 					File file = imgch.getSelectedFile();
 					imagepath = file.getAbsolutePath();
-					imgpth.setText(imagepath);
 					Image img = ImageIO.read(file);
 
 					viewer.setIcon(new ImageIcon(img.getScaledInstance(200, 200, 200)));
@@ -152,7 +149,6 @@ public class Recognizer extends JFrame implements ActionListener {
 				result.setText(String.format("BEST MATCH: %s (%.2f%% likely)", labels.get(bestLabelIdx),
 						labelProbabilities[bestLabelIdx] * 100f));
 				bestMatch = labels.get(bestLabelIdx);
-				// Calculations.listMatches1(bestMatch, products, results);
 				Calculations.listMatches2(bestMatch, products, results, index);
 			}
 
