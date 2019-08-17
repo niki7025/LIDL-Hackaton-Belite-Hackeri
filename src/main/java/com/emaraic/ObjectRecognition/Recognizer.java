@@ -83,22 +83,23 @@ public class Recognizer extends JFrame implements ActionListener {
 		Iterator<JSONObject> iterator = array.iterator();
 		 while(iterator.hasNext()){
 			 JSONObject current = iterator.next();
-			 products.add(current.get("ProductId")+ " " + current.get("Name") + " " + current.get("Description"));
+			 products.add((current.get("ProductId") + " " + current.get("Name") + " " + current.get("Description")).toLowerCase());
 		 }		
 	}
 	
 	private void listMatches(String word) {
+		word = word.toLowerCase();
 		for(String product : products) {
 			if(product.indexOf(word) == -1) {
 				continue;
 			}
-			results.setText(product);
+			results.setText(product + "\n" +  results.getText() );
 		}
 	}
 	
 	public Recognizer() {
 		setTitle("Object Recognition - Emaraic.com");
-		setSize(1000, 800);
+		setSize(1300, 800);
 		table = new Table();
 
 		predict = new JButton("Predict");
@@ -196,6 +197,7 @@ public class Recognizer extends JFrame implements ActionListener {
 		}
 
 		if (e.getSource() == predict) {
+			results.setText("");
 			byte[] imageBytes = readAllBytesOrExit(Paths.get(imagepath));
 
 			try (Tensor image = Tensor.create(imageBytes)) {
